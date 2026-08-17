@@ -1,0 +1,1053 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>JAGER — демо (игровая валюта)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@500;700;900&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0a0716;
+    --bg-2:#120c26;
+    --surface:#170f30;
+    --surface-2:#1e1440;
+    --border:#2c1f57;
+    --accent-1:#8b5cf6;
+    --accent-2:#d946a8;
+    --accent-grad:linear-gradient(135deg,#8b5cf6 0%,#c026d3 55%,#d946a8 100%);
+    --gold:#f5c451;
+    --green:#3ddc84;
+    --red:#ff5470;
+    --text:#f4f0ff;
+    --muted:#9186b8;
+    --muted-2:#635a85;
+    --radius:18px;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+  html,body{height:100%;}
+  body{
+    margin:0;
+    background:
+      radial-gradient(circle at 15% 0%, #2a1a55 0%, transparent 45%),
+      radial-gradient(circle at 90% 15%, #3a1450 0%, transparent 40%),
+      var(--bg);
+    color:var(--text);
+    font-family:'Inter',sans-serif;
+    display:flex;
+    justify-content:center;
+    min-height:100vh;
+  }
+  .app{
+    width:100%;
+    max-width:420px;
+    min-height:100vh;
+    display:flex;
+    flex-direction:column;
+    position:relative;
+    padding-bottom:78px;
+  }
+  ::-webkit-scrollbar{display:none;}
+
+  /* Topbar */
+  .topbar{
+    display:flex;align-items:center;justify-content:space-between;
+    padding:18px 18px 6px;
+  }
+  .brand{
+    font-family:'Unbounded',sans-serif;
+    font-weight:900;
+    font-size:19px;
+    letter-spacing:0.5px;
+    background:var(--accent-grad);
+    -webkit-background-clip:text;background-clip:text;color:transparent;
+  }
+  .topbar-icons{display:flex;gap:10px;}
+  .icon-btn{
+    width:34px;height:34px;border-radius:50%;
+    background:var(--surface);border:1px solid var(--border);
+    display:flex;align-items:center;justify-content:center;
+    color:var(--muted);font-size:14px;cursor:pointer;
+  }
+
+  /* Balance bar */
+  .balance-bar{
+    margin:12px 16px 6px;
+    background:var(--surface);
+    border:1px solid var(--border);
+    border-radius:16px;
+    padding:12px 14px;
+    display:flex;align-items:center;justify-content:space-between;
+    gap:10px;
+  }
+  .balance-left{display:flex;flex-direction:column;gap:2px;}
+  .balance-label{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:0.06em;}
+  .balance-value{
+    font-family:'Unbounded',sans-serif;
+    font-size:18px;font-weight:700;
+    display:flex;align-items:center;gap:6px;
+  }
+  .chip-dot{width:16px;height:16px;border-radius:50%;background:var(--accent-grad);flex:none;
+    display:inline-flex;align-items:center;justify-content:center;font-size:9px;}
+  .topup-btn{
+    background:var(--accent-grad);
+    border:none;color:#fff;font-family:'Inter',sans-serif;font-weight:700;font-size:13px;
+    padding:9px 16px;border-radius:12px;cursor:pointer;white-space:nowrap;
+  }
+  .demo-note{
+    margin:2px 16px 14px;
+    font-size:11px;color:var(--muted-2);
+    display:flex;align-items:center;gap:6px;
+  }
+  .demo-note .dot{width:5px;height:5px;border-radius:50%;background:var(--green);flex:none;}
+
+  /* Screens */
+  .screen{display:none;padding:0 16px 20px;flex:1;}
+  .screen.active{display:block;}
+
+  h2.section-title{
+    font-family:'Unbounded',sans-serif;
+    font-size:15px;font-weight:700;
+    margin:6px 0 12px;
+    display:flex;align-items:center;justify-content:space-between;
+  }
+  .back-row{display:flex;align-items:center;gap:10px;margin:4px 0 14px;}
+  .back-btn{
+    width:34px;height:34px;border-radius:50%;background:var(--surface);
+    border:1px solid var(--border);display:flex;align-items:center;justify-content:center;
+    cursor:pointer;color:var(--text);font-size:16px;
+  }
+  .back-title{font-family:'Unbounded',sans-serif;font-weight:700;font-size:16px;}
+
+  /* Game list cards */
+  .game-card{
+    position:relative;
+    border-radius:var(--radius);
+    padding:16px;
+    margin-bottom:12px;
+    border:1px solid var(--border);
+    background:var(--surface);
+    overflow:hidden;
+    cursor:pointer;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:12px;
+  }
+  .game-card::before{
+    content:'';position:absolute;inset:0;
+    background:var(--accent-grad);opacity:0;transition:opacity .2s;
+  }
+  .game-card:active::before{opacity:.12;}
+  .game-info{position:relative;z-index:1;}
+  .game-online{
+    font-size:11px;color:var(--green);display:flex;align-items:center;gap:5px;margin-bottom:6px;
+  }
+  .game-online .dot{width:6px;height:6px;border-radius:50%;background:var(--green);}
+  .game-name{font-family:'Unbounded',sans-serif;font-size:16px;font-weight:700;margin-bottom:3px;}
+  .game-desc{font-size:12.5px;color:var(--muted);}
+  .game-emoji{
+    font-size:34px;flex:none;position:relative;z-index:1;
+    width:58px;height:58px;border-radius:14px;
+    background:var(--surface-2);display:flex;align-items:center;justify-content:center;
+  }
+
+  /* Bottom nav */
+  .bottom-nav{
+    position:fixed;bottom:0;left:50%;transform:translateX(-50%);
+    width:100%;max-width:420px;
+    background:rgba(10,7,22,0.92);
+    backdrop-filter:blur(14px);
+    border-top:1px solid var(--border);
+    display:flex;justify-content:space-around;align-items:center;
+    padding:9px 4px 12px;
+    z-index:50;
+  }
+  .nav-item{
+    display:flex;flex-direction:column;align-items:center;gap:4px;
+    color:var(--muted-2);font-size:10.5px;cursor:pointer;
+    flex:1;padding:2px 0;
+  }
+  .nav-item svg{width:20px;height:20px;stroke:var(--muted-2);fill:none;transition:.15s;}
+  .nav-item.active{color:var(--text);}
+  .nav-item.active svg{stroke:var(--accent-1);filter:drop-shadow(0 0 6px rgba(139,92,246,.6));}
+  .nav-item.disabled{opacity:.35;}
+
+  /* Buttons/inputs generic */
+  .panel{
+    background:var(--surface);border:1px solid var(--border);
+    border-radius:var(--radius);padding:16px;margin-bottom:14px;
+  }
+  .bet-row{display:flex;gap:8px;margin-bottom:12px;}
+  .bet-input-wrap{
+    flex:1;background:var(--surface-2);border:1px solid var(--border);
+    border-radius:12px;padding:10px 12px;display:flex;align-items:center;gap:8px;
+  }
+  .bet-input-wrap input{
+    background:none;border:none;color:var(--text);font-family:'Unbounded',sans-serif;
+    font-size:15px;font-weight:700;width:100%;outline:none;
+  }
+  .quick-bet{display:flex;gap:6px;}
+  .quick-bet button{
+    background:var(--surface-2);border:1px solid var(--border);color:var(--muted);
+    font-size:11px;font-weight:600;padding:7px 9px;border-radius:9px;cursor:pointer;
+  }
+  .primary-btn{
+    width:100%;padding:14px;border:none;border-radius:14px;
+    background:var(--accent-grad);color:#fff;
+    font-family:'Unbounded',sans-serif;font-weight:700;font-size:14px;
+    cursor:pointer;letter-spacing:0.02em;
+  }
+  .primary-btn:disabled{opacity:.4;cursor:not-allowed;}
+  .secondary-btn{
+    width:100%;padding:14px;border-radius:14px;
+    background:var(--surface-2);border:1px solid var(--border);color:var(--text);
+    font-family:'Unbounded',sans-serif;font-weight:700;font-size:14px;cursor:pointer;
+  }
+  .result-msg{
+    text-align:center;font-family:'Unbounded',sans-serif;font-weight:700;font-size:14px;
+    padding:12px;border-radius:12px;margin-bottom:12px;display:none;
+  }
+  .result-msg.win{display:block;background:rgba(61,220,132,.12);color:var(--green);border:1px solid rgba(61,220,132,.3);}
+  .result-msg.lose{display:block;background:rgba(255,84,112,.12);color:var(--red);border:1px solid rgba(255,84,112,.3);}
+
+  /* ROULETTE */
+  .wheel-wrap{display:flex;flex-direction:column;align-items:center;padding:10px 0 4px;}
+  .wheel-outer{position:relative;width:250px;height:250px;margin-bottom:18px;}
+  .wheel{
+    width:100%;height:100%;border-radius:50%;
+    border:5px solid var(--surface-2);
+    box-shadow:0 0 0 1px var(--border), 0 20px 50px rgba(139,92,246,.25);
+    transition:transform 4.2s cubic-bezier(.12,.85,.13,1);
+    position:relative;
+  }
+  .wheel-center{
+    position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
+    width:64px;height:64px;border-radius:50%;background:var(--bg-2);
+    border:1px solid var(--border);
+    display:flex;align-items:center;justify-content:center;
+    font-family:'Unbounded',sans-serif;font-weight:700;font-size:11px;color:var(--muted);
+    z-index:3;
+  }
+  .wheel-pointer{
+    position:absolute;top:-6px;left:50%;transform:translateX(-50%);
+    width:0;height:0;
+    border-left:11px solid transparent;border-right:11px solid transparent;
+    border-top:18px solid var(--gold);
+    z-index:4;filter:drop-shadow(0 2px 4px rgba(0,0,0,.4));
+  }
+  .mult-legend{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;margin-bottom:14px;}
+  .mult-pill{
+    font-size:10.5px;font-weight:700;padding:4px 9px;border-radius:8px;
+    background:var(--surface-2);border:1px solid var(--border);
+  }
+
+  /* MINES */
+  .mines-grid{
+    display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-bottom:14px;
+  }
+  .mine-cell{
+    aspect-ratio:1;border-radius:10px;background:var(--surface-2);
+    border:1px solid var(--border);display:flex;align-items:center;justify-content:center;
+    font-size:18px;cursor:pointer;transition:transform .1s;
+  }
+  .mine-cell:active{transform:scale(0.93);}
+  .mine-cell.revealed-safe{background:rgba(61,220,132,.14);border-color:rgba(61,220,132,.4);}
+  .mine-cell.revealed-mine{background:rgba(255,84,112,.18);border-color:rgba(255,84,112,.5);}
+  .mine-cell.locked{pointer-events:none;}
+  .mines-stat-row{display:flex;justify-content:space-between;margin-bottom:12px;font-size:12.5px;color:var(--muted);}
+  .mines-stat-row b{color:var(--text);font-family:'Unbounded',sans-serif;font-size:14px;}
+  .stepper{display:flex;align-items:center;gap:10px;}
+  .stepper button{
+    width:30px;height:30px;border-radius:9px;background:var(--surface-2);border:1px solid var(--border);
+    color:var(--text);font-size:16px;cursor:pointer;
+  }
+  .stepper span{font-family:'Unbounded',sans-serif;font-weight:700;min-width:20px;text-align:center;}
+
+  /* UPGRADE */
+  .upgrade-visual{
+    display:flex;align-items:center;justify-content:space-between;margin:14px 0 18px;position:relative;
+  }
+  .upgrade-box{
+    width:100px;height:100px;border-radius:14px;background:var(--surface-2);
+    border:1px solid var(--border);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;
+  }
+  .upgrade-box .val{font-family:'Unbounded',sans-serif;font-weight:700;font-size:15px;}
+  .upgrade-box .lbl{font-size:10px;color:var(--muted);}
+  .upgrade-arrow{font-size:20px;color:var(--muted);}
+  .chance-slider-wrap{margin-bottom:16px;}
+  .chance-row{display:flex;justify-content:space-between;font-size:12px;color:var(--muted);margin-bottom:8px;}
+  .chance-row b{color:var(--gold);font-family:'Unbounded',sans-serif;}
+  input[type=range]{
+    width:100%;accent-color:var(--accent-1);height:4px;
+  }
+  .upgrade-arc{
+    position:relative;height:110px;display:flex;align-items:flex-end;justify-content:center;margin-bottom:8px;
+  }
+
+  /* ROCKET */
+  .rocket-stage{
+    height:220px;border-radius:16px;background:var(--surface-2);border:1px solid var(--border);
+    position:relative;overflow:hidden;margin-bottom:14px;
+    display:flex;align-items:center;justify-content:center;
+  }
+  .rocket-mult{
+    font-family:'Unbounded',sans-serif;font-weight:900;font-size:38px;
+    z-index:2;transition:color .2s;
+  }
+  .rocket-emoji{
+    position:absolute;font-size:26px;left:50%;bottom:14px;transform:translateX(-50%);
+    transition:transform .1s linear, bottom .1s linear;z-index:2;
+  }
+  .rocket-trail{
+    position:absolute;bottom:0;left:0;right:0;height:0%;
+    background:linear-gradient(0deg, rgba(139,92,246,.35), transparent);
+    transition:height .1s linear;
+  }
+  .rocket-status{text-align:center;font-size:12px;color:var(--muted);margin-bottom:12px;}
+
+  /* PROFILE */
+  .profile-head{display:flex;flex-direction:column;align-items:center;padding:20px 0 10px;}
+  .avatar{
+    width:78px;height:78px;border-radius:50%;background:var(--accent-grad);
+    display:flex;align-items:center;justify-content:center;font-size:30px;margin-bottom:10px;
+    box-shadow:0 8px 24px rgba(139,92,246,.35);
+  }
+  .username{font-family:'Unbounded',sans-serif;font-weight:700;font-size:16px;}
+  .profile-list{margin-top:16px;}
+  .profile-row{
+    display:flex;align-items:center;justify-content:space-between;
+    padding:15px 16px;background:var(--surface);border:1px solid var(--border);
+    border-radius:14px;margin-bottom:10px;cursor:pointer;
+  }
+  .profile-row-left{display:flex;align-items:center;gap:12px;font-size:14px;font-weight:600;}
+  .profile-row-left .ic{font-size:18px;}
+  .badge{
+    background:var(--accent-grad);color:#fff;font-size:11px;font-weight:700;
+    padding:2px 8px;border-radius:20px;
+  }
+  .chev{color:var(--muted-2);}
+  .locked-note{font-size:10.5px;color:var(--muted-2);}
+  .reset-btn{margin-top:6px;}
+
+  .empty-tab{
+    padding:60px 20px;text-align:center;color:var(--muted);
+  }
+  .empty-tab .big-ic{font-size:40px;margin-bottom:10px;}
+  .empty-tab .t{font-family:'Unbounded',sans-serif;font-weight:700;color:var(--text);margin-bottom:6px;}
+
+  .toast{
+    position:fixed;bottom:96px;left:50%;transform:translateX(-50%) translateY(20px);
+    background:var(--surface-2);border:1px solid var(--border);
+    padding:10px 18px;border-radius:12px;font-size:13px;font-weight:600;
+    opacity:0;transition:.25s;pointer-events:none;z-index:100;max-width:380px;text-align:center;
+  }
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+</style>
+</head>
+<body>
+<div class="app">
+
+  <div class="topbar">
+    <div class="brand">JAGER</div>
+    <div class="topbar-icons">
+      <div class="icon-btn">⋮</div>
+      <div class="icon-btn">✕</div>
+    </div>
+  </div>
+
+  <div class="balance-bar">
+    <div class="balance-left">
+      <div class="balance-label">Баланс (демо)</div>
+      <div class="balance-value"><span class="chip-dot">◆</span><span id="balanceDisplay">—</span></div>
+    </div>
+    <button class="topup-btn" id="topupBtn">Пополнить</button>
+  </div>
+  <div class="demo-note"><span class="dot"></span>Игровая валюта без реальной стоимости — только демо</div>
+
+  <!-- SOLO / GAME LIST -->
+  <div class="screen active" id="screen-solo">
+    <h2 class="section-title">Соло игры</h2>
+
+    <div class="game-card" data-game="mines">
+      <div class="game-info">
+        <div class="game-online"><span class="dot"></span>7 онлайн</div>
+        <div class="game-name">Мины</div>
+        <div class="game-desc">Открывай клетки, копи множитель</div>
+      </div>
+      <div class="game-emoji">💣</div>
+    </div>
+
+    <div class="game-card" data-game="roulette">
+      <div class="game-info">
+        <div class="game-online"><span class="dot"></span>11 онлайн</div>
+        <div class="game-name">Рулетка</div>
+        <div class="game-desc">Крути колесо на удачу</div>
+      </div>
+      <div class="game-emoji">🎡</div>
+    </div>
+
+    <div class="game-card" data-game="upgrade">
+      <div class="game-info">
+        <div class="game-online"><span class="dot"></span>5 онлайн</div>
+        <div class="game-name">Апгрейд</div>
+        <div class="game-desc">Рискни балансом ради множителя</div>
+      </div>
+      <div class="game-emoji">📈</div>
+    </div>
+
+    <div class="game-card" data-game="rocket">
+      <div class="game-info">
+        <div class="game-online"><span class="dot"></span>9 онлайн</div>
+        <div class="game-name">Ракета</div>
+        <div class="game-desc">Забери выигрыш до взрыва</div>
+      </div>
+      <div class="game-emoji">🚀</div>
+    </div>
+  </div>
+
+  <!-- MINES SCREEN -->
+  <div class="screen" id="screen-mines">
+    <div class="back-row"><div class="back-btn" data-back>←</div><div class="back-title">Мины</div></div>
+    <div class="panel">
+      <div class="bet-row">
+        <div class="bet-input-wrap"><span class="chip-dot">◆</span><input type="number" id="minesBet" value="50" min="1"></div>
+        <div class="quick-bet">
+          <button data-half="minesBet">1/2</button>
+          <button data-double="minesBet">x2</button>
+        </div>
+      </div>
+      <div class="mines-stat-row">
+        <span>Количество мин</span>
+        <div class="stepper">
+          <button id="minesMinus">–</button><span id="minesCount">3</span><button id="minesPlus">+</button>
+        </div>
+      </div>
+      <div class="mines-stat-row"><span>Текущий множитель</span><b id="minesMultDisplay">x1.00</b></div>
+    </div>
+
+    <div class="result-msg" id="minesResult"></div>
+
+    <div class="mines-grid" id="minesGrid"></div>
+
+    <button class="primary-btn" id="minesStartBtn">Начать игру</button>
+    <button class="secondary-btn" id="minesCashoutBtn" style="display:none;margin-top:10px;">Забрать выигрыш</button>
+  </div>
+
+  <!-- ROULETTE SCREEN -->
+  <div class="screen" id="screen-roulette">
+    <div class="back-row"><div class="back-btn" data-back>←</div><div class="back-title">Рулетка</div></div>
+
+    <div class="wheel-wrap">
+      <div class="wheel-outer">
+        <div class="wheel-pointer"></div>
+        <div class="wheel" id="wheel"></div>
+        <div class="wheel-center" id="wheelCenter">?</div>
+      </div>
+      <div class="mult-legend" id="wheelLegend"></div>
+    </div>
+
+    <div class="result-msg" id="rouletteResult"></div>
+
+    <div class="panel">
+      <div class="bet-row">
+        <div class="bet-input-wrap"><span class="chip-dot">◆</span><input type="number" id="rouletteBet" value="50" min="1"></div>
+        <div class="quick-bet">
+          <button data-half="rouletteBet">1/2</button>
+          <button data-double="rouletteBet">x2</button>
+        </div>
+      </div>
+      <button class="primary-btn" id="rouletteSpinBtn">Крутить</button>
+    </div>
+  </div>
+
+  <!-- UPGRADE SCREEN -->
+  <div class="screen" id="screen-upgrade">
+    <div class="back-row"><div class="back-btn" data-back>←</div><div class="back-title">Апгрейд</div></div>
+
+    <div class="panel">
+      <div class="bet-row">
+        <div class="bet-input-wrap"><span class="chip-dot">◆</span><input type="number" id="upgradeBet" value="50" min="1"></div>
+        <div class="quick-bet">
+          <button data-half="upgradeBet">1/2</button>
+          <button data-double="upgradeBet">x2</button>
+        </div>
+      </div>
+
+      <div class="upgrade-visual">
+        <div class="upgrade-box"><div class="val" id="upgradeFromVal">◆50</div><div class="lbl">Ставка</div></div>
+        <div class="upgrade-arrow">→</div>
+        <div class="upgrade-box"><div class="val" id="upgradeToVal">◆100</div><div class="lbl">При успехе</div></div>
+      </div>
+
+      <div class="chance-slider-wrap">
+        <div class="chance-row"><span>Множитель</span><b id="upgradeMultLabel">x2.00</b></div>
+        <input type="range" id="upgradeMultSlider" min="12" max="100" value="20" step="1">
+        <div class="chance-row" style="margin-top:8px;"><span>Шанс успеха</span><b id="upgradeChanceLabel">47%</b></div>
+      </div>
+    </div>
+
+    <div class="result-msg" id="upgradeResult"></div>
+
+    <button class="primary-btn" id="upgradeGoBtn">Попробовать апгрейд</button>
+  </div>
+
+  <!-- ROCKET SCREEN -->
+  <div class="screen" id="screen-rocket">
+    <div class="back-row"><div class="back-btn" data-back>←</div><div class="back-title">Ракета</div></div>
+
+    <div class="rocket-stage">
+      <div class="rocket-trail" id="rocketTrail"></div>
+      <div class="rocket-mult" id="rocketMultDisplay" style="color:var(--text)">1.00x</div>
+      <div class="rocket-emoji" id="rocketEmoji">🚀</div>
+    </div>
+    <div class="rocket-status" id="rocketStatus">Сделай ставку и запусти ракету</div>
+
+    <div class="result-msg" id="rocketResult"></div>
+
+    <div class="panel">
+      <div class="bet-row">
+        <div class="bet-input-wrap"><span class="chip-dot">◆</span><input type="number" id="rocketBet" value="50" min="1"></div>
+        <div class="quick-bet">
+          <button data-half="rocketBet">1/2</button>
+          <button data-double="rocketBet">x2</button>
+        </div>
+      </div>
+      <button class="primary-btn" id="rocketLaunchBtn">Запустить</button>
+      <button class="secondary-btn" id="rocketCashoutBtn" style="display:none;margin-top:10px;">Забрать 1.00x</button>
+    </div>
+  </div>
+
+  <!-- PVP TAB -->
+  <div class="screen" id="screen-pvp">
+    <div class="empty-tab">
+      <div class="big-ic">⚔️</div>
+      <div class="t">ПвП скоро откроется</div>
+      <div>В демо-версии доступны только соло-игры на игровую валюту</div>
+    </div>
+  </div>
+
+  <!-- GIVEAWAYS TAB -->
+  <div class="screen" id="screen-giveaways">
+    <div class="empty-tab">
+      <div class="big-ic">🎁</div>
+      <div class="t">Розыгрышей пока нет</div>
+      <div>Загляни позже — здесь появятся бесплатные раунды</div>
+    </div>
+  </div>
+
+  <!-- SHOP TAB -->
+  <div class="screen" id="screen-shop">
+    <div class="empty-tab">
+      <div class="big-ic">🏬</div>
+      <div class="t">Магазин в разработке</div>
+      <div>Обмен на реальные покупки в демо-версии не предусмотрен</div>
+    </div>
+  </div>
+
+  <!-- PROFILE TAB -->
+  <div class="screen" id="screen-profile">
+    <div class="profile-head">
+      <div class="avatar">🐺</div>
+      <div class="username">@crownemir</div>
+    </div>
+
+    <div class="profile-list">
+      <div class="profile-row">
+        <div class="profile-row-left"><span class="ic">🎁</span>Инвентарь</div>
+        <div style="display:flex;align-items:center;gap:8px;"><span class="badge">0</span><span class="chev">›</span></div>
+      </div>
+      <div class="profile-row">
+        <div class="profile-row-left"><span class="ic">💎</span>Рефералы</div>
+        <div style="display:flex;align-items:center;gap:8px;"><span class="locked-note">демо</span><span class="chev">›</span></div>
+      </div>
+      <div class="profile-row">
+        <div class="profile-row-left"><span class="ic">💰</span>Стейкинг</div>
+        <div style="display:flex;align-items:center;gap:8px;"><span class="locked-note">демо</span><span class="chev">›</span></div>
+      </div>
+    </div>
+
+    <button class="secondary-btn reset-btn" id="resetBalanceBtn">Сбросить демо-баланс</button>
+  </div>
+
+  <div class="bottom-nav">
+    <div class="nav-item disabled" data-tab="pvp">
+      <svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round"><path d="M6 3l12 12M18 3L6 15"/></svg>
+      ПвП
+    </div>
+    <div class="nav-item active" data-tab="solo">
+      <svg viewBox="0 0 24 24" stroke-width="2"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="2.5"/></svg>
+      Соло
+    </div>
+    <div class="nav-item disabled" data-tab="giveaways">
+      <svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="8" width="18" height="13" rx="1"/><path d="M12 8v13M3 8h18M12 8c-2-4-6-4-6-1s3 1 6 1c3 0 6 2 6-1s-4-3-6 0z"/></svg>
+      Розыгрыши
+    </div>
+    <div class="nav-item disabled" data-tab="shop">
+      <svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 10l1-6h14l1 6M4 10v10h16V10M4 10h16"/></svg>
+      Магазин
+    </div>
+    <div class="nav-item" data-tab="profile">
+      <svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 4-6 8-6s8 2 8 6"/></svg>
+      Профиль
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+</div>
+
+<script>
+(function(){
+  const START_BALANCE = 1000;
+  let balance = START_BALANCE;
+  let storageReady = false;
+
+  const $ = id => document.getElementById(id);
+  const fmt = n => Math.round(n).toLocaleString('ru-RU');
+
+  function toast(msg){
+    const t = $('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    clearTimeout(toast._h);
+    toast._h = setTimeout(()=>t.classList.remove('show'), 1800);
+  }
+
+  function renderBalance(){
+    $('balanceDisplay').textContent = fmt(balance);
+  }
+
+  async function loadProfile(){
+    try{
+      const res = await window.storage.get('profile');
+      if(res && res.value){
+        const data = JSON.parse(res.value);
+        balance = typeof data.balance === 'number' ? data.balance : START_BALANCE;
+      } else {
+        balance = START_BALANCE;
+      }
+    }catch(e){
+      balance = START_BALANCE;
+    }
+    storageReady = true;
+    renderBalance();
+  }
+
+  async function saveProfile(){
+    try{
+      await window.storage.set('profile', JSON.stringify({balance:balance, updated:Date.now()}));
+    }catch(e){ /* silent fail, balance still works in-memory */ }
+  }
+
+  function changeBalance(delta){
+    balance += delta;
+    if(balance < 0) balance = 0;
+    renderBalance();
+    saveProfile();
+  }
+
+  loadProfile();
+
+  $('topupBtn').addEventListener('click', ()=>{
+    changeBalance(500);
+    toast('Начислено 500 демо-фишек (без реальной стоимости)');
+  });
+
+  $('resetBalanceBtn').addEventListener('click', ()=>{
+    balance = START_BALANCE;
+    renderBalance();
+    saveProfile();
+    toast('Демо-баланс сброшен до ' + START_BALANCE);
+  });
+
+  // ---------- Navigation ----------
+  const screens = document.querySelectorAll('.screen');
+  const navItems = document.querySelectorAll('.nav-item');
+  const tabScreenMap = {pvp:'pvp', solo:'solo', giveaways:'giveaways', shop:'shop', profile:'profile'};
+
+  function showScreen(id){
+    screens.forEach(s=>s.classList.remove('active'));
+    $('screen-'+id).classList.add('active');
+  }
+
+  navItems.forEach(item=>{
+    item.addEventListener('click', ()=>{
+      navItems.forEach(n=>n.classList.remove('active'));
+      item.classList.add('active');
+      const tab = item.dataset.tab;
+      showScreen(tabScreenMap[tab] || 'solo');
+    });
+  });
+
+  document.querySelectorAll('.game-card').forEach(card=>{
+    card.addEventListener('click', ()=> showScreen(card.dataset.game));
+  });
+
+  document.querySelectorAll('[data-back]').forEach(btn=>{
+    btn.addEventListener('click', ()=> showScreen('solo'));
+  });
+
+  // Quick bet helpers
+  document.querySelectorAll('[data-half]').forEach(b=>{
+    b.addEventListener('click', ()=>{
+      const inp = $(b.dataset.half);
+      inp.value = Math.max(1, Math.floor(parseFloat(inp.value||1)/2));
+      inp.dispatchEvent(new Event('input'));
+    });
+  });
+  document.querySelectorAll('[data-double]').forEach(b=>{
+    b.addEventListener('click', ()=>{
+      const inp = $(b.dataset.double);
+      inp.value = Math.max(1, Math.floor(parseFloat(inp.value||1)*2));
+      inp.dispatchEvent(new Event('input'));
+    });
+  });
+
+  function getBet(id){
+    const v = Math.floor(parseFloat($(id).value));
+    return (isNaN(v) || v < 1) ? 0 : v;
+  }
+
+  // ==================== MINES ====================
+  const MINES_TOTAL = 25;
+  let minesState = null;
+
+  function minesMultiplier(mines, revealed){
+    // fair-ish escalating multiplier with house edge ~5%
+    let mult = 1;
+    let safe = MINES_TOTAL - mines;
+    for(let i=0;i<revealed;i++){
+      mult *= (MINES_TOTAL - i) / (safe - i);
+    }
+    return mult * 0.95;
+  }
+
+  function buildMinesGrid(){
+    const grid = $('minesGrid');
+    grid.innerHTML = '';
+    for(let i=0;i<MINES_TOTAL;i++){
+      const cell = document.createElement('div');
+      cell.className = 'mine-cell';
+      cell.dataset.idx = i;
+      cell.addEventListener('click', onMineCellClick);
+      grid.appendChild(cell);
+    }
+  }
+  buildMinesGrid();
+
+  $('minesMinus').addEventListener('click', ()=>{
+    let n = parseInt($('minesCount').textContent);
+    if(n>1){ $('minesCount').textContent = n-1; }
+  });
+  $('minesPlus').addEventListener('click', ()=>{
+    let n = parseInt($('minesCount').textContent);
+    if(n<24){ $('minesCount').textContent = n+1; }
+  });
+
+  $('minesStartBtn').addEventListener('click', ()=>{
+    const bet = getBet('minesBet');
+    if(bet <= 0){ toast('Введите ставку'); return; }
+    if(bet > balance){ toast('Недостаточно фишек'); return; }
+    const minesCount = parseInt($('minesCount').textContent);
+
+    changeBalance(-bet);
+    const minePositions = new Set();
+    while(minePositions.size < minesCount){
+      minePositions.add(Math.floor(Math.random()*MINES_TOTAL));
+    }
+    minesState = {bet, minesCount, minePositions, revealed:0, active:true};
+
+    document.querySelectorAll('.mine-cell').forEach(c=>{
+      c.className = 'mine-cell';
+      c.textContent = '';
+    });
+    $('minesResult').className = 'result-msg';
+    $('minesResult').textContent = '';
+    $('minesMultDisplay').textContent = 'x1.00';
+    $('minesStartBtn').style.display = 'none';
+    $('minesCashoutBtn').style.display = 'block';
+  });
+
+  function onMineCellClick(e){
+    if(!minesState || !minesState.active) return;
+    const idx = parseInt(e.currentTarget.dataset.idx);
+    const cell = e.currentTarget;
+    if(cell.classList.contains('revealed-safe') || cell.classList.contains('revealed-mine')) return;
+
+    if(minesState.minePositions.has(idx)){
+      cell.classList.add('revealed-mine');
+      cell.textContent = '💥';
+      minesState.active = false;
+      revealAllMines();
+      $('minesResult').className = 'result-msg lose';
+      $('minesResult').textContent = 'Взрыв! Потеряно ' + fmt(minesState.bet) + ' фишек';
+      endMinesRound();
+    } else {
+      minesState.revealed++;
+      cell.classList.add('revealed-safe');
+      cell.textContent = '💎';
+      const mult = minesMultiplier(minesState.minesCount, minesState.revealed);
+      $('minesMultDisplay').textContent = 'x' + mult.toFixed(2);
+      $('minesCashoutBtn').textContent = 'Забрать ' + fmt(minesState.bet*mult) + ' фишек';
+      if(minesState.revealed === MINES_TOTAL - minesState.minesCount){
+        cashoutMines();
+      }
+    }
+  }
+
+  function revealAllMines(){
+    document.querySelectorAll('.mine-cell').forEach(c=>{
+      const idx = parseInt(c.dataset.idx);
+      c.classList.add('locked');
+      if(minesState.minePositions.has(idx) && !c.classList.contains('revealed-mine')){
+        c.classList.add('revealed-mine');
+        c.textContent = '💣';
+      }
+    });
+  }
+
+  function cashoutMines(){
+    if(!minesState || !minesState.active) return;
+    const mult = minesMultiplier(minesState.minesCount, minesState.revealed);
+    const win = minesState.bet * mult;
+    minesState.active = false;
+    changeBalance(win);
+    $('minesResult').className = 'result-msg win';
+    $('minesResult').textContent = minesState.revealed>0
+      ? ('Выигрыш ' + fmt(win) + ' фишек (x' + mult.toFixed(2) + ')')
+      : 'Ставка возвращена';
+    revealAllMines();
+    endMinesRound();
+  }
+
+  $('minesCashoutBtn').addEventListener('click', ()=>{
+    if(!minesState || !minesState.active) return;
+    if(minesState.revealed === 0){ toast('Откройте хотя бы одну клетку'); return; }
+    cashoutMines();
+  });
+
+  function endMinesRound(){
+    $('minesCashoutBtn').style.display = 'none';
+    $('minesStartBtn').style.display = 'block';
+    $('minesStartBtn').textContent = 'Начать игру';
+  }
+
+  // ==================== ROULETTE ====================
+  const wheelSegments = [
+    {mult:0,   color:'#241a45', weight:30},
+    {mult:1.2, color:'#3a2570', weight:25},
+    {mult:1.5, color:'#5b3aa8', weight:18},
+    {mult:2,   color:'#8b5cf6', weight:14},
+    {mult:3,   color:'#c026d3', weight:8},
+    {mult:5,   color:'#d946a8', weight:4},
+    {mult:10,  color:'#f5c451', weight:1},
+  ];
+  const totalWeight = wheelSegments.reduce((s,x)=>s+x.weight,0);
+
+  function buildWheel(){
+    let acc = 0;
+    const gradParts = [];
+    wheelSegments.forEach(seg=>{
+      const startDeg = acc/totalWeight*360;
+      acc += seg.weight;
+      const endDeg = acc/totalWeight*360;
+      gradParts.push(seg.color+' '+startDeg.toFixed(2)+'deg '+endDeg.toFixed(2)+'deg');
+    });
+    $('wheel').style.background = 'conic-gradient(' + gradParts.join(',') + ')';
+
+    const legend = $('wheelLegend');
+    legend.innerHTML = '';
+    wheelSegments.forEach(seg=>{
+      const pill = document.createElement('div');
+      pill.className = 'mult-pill';
+      pill.style.color = seg.color === '#241a45' ? 'var(--muted)' : seg.color;
+      pill.textContent = 'x'+seg.mult;
+      legend.appendChild(pill);
+    });
+  }
+  buildWheel();
+
+  let wheelRotation = 0;
+  let spinning = false;
+
+  $('rouletteSpinBtn').addEventListener('click', ()=>{
+    if(spinning) return;
+    const bet = getBet('rouletteBet');
+    if(bet <= 0){ toast('Введите ставку'); return; }
+    if(bet > balance){ toast('Недостаточно фишек'); return; }
+
+    changeBalance(-bet);
+    spinning = true;
+    $('rouletteResult').className = 'result-msg';
+    $('rouletteSpinBtn').disabled = true;
+    $('wheelCenter').textContent = '...';
+
+    // weighted pick
+    let r = Math.random()*totalWeight;
+    let acc = 0, chosen = wheelSegments[0], chosenIdx = 0;
+    for(let i=0;i<wheelSegments.length;i++){
+      acc += wheelSegments[i].weight;
+      if(r <= acc){ chosen = wheelSegments[i]; chosenIdx = i; break; }
+    }
+    // compute target angle within that segment
+    const startW = wheelSegments.slice(0,chosenIdx).reduce((s,x)=>s+x.weight,0);
+    const segStartDeg = startW/totalWeight*360;
+    const segEndDeg = (startW+chosen.weight)/totalWeight*360;
+    const targetDeg = segStartDeg + (segEndDeg-segStartDeg)*0.5;
+
+    const spins = 5 + Math.floor(Math.random()*2);
+    const finalRotation = wheelRotation - (wheelRotation % 360) + spins*360 + (360 - targetDeg);
+    wheelRotation = finalRotation;
+    $('wheel').style.transform = 'rotate('+finalRotation+'deg)';
+
+    setTimeout(()=>{
+      spinning = false;
+      $('rouletteSpinBtn').disabled = false;
+      $('wheelCenter').textContent = 'x'+chosen.mult;
+      const win = bet * chosen.mult;
+      if(chosen.mult > 0){
+        changeBalance(win);
+        $('rouletteResult').className = 'result-msg win';
+        $('rouletteResult').textContent = 'Выпало x'+chosen.mult+' — выигрыш '+fmt(win)+' фишек';
+      } else {
+        $('rouletteResult').className = 'result-msg lose';
+        $('rouletteResult').textContent = 'Выпало x0 — ставка сгорела';
+      }
+    }, 4300);
+  });
+
+  // ==================== UPGRADE ====================
+  function updateUpgradeUI(){
+    const bet = getBet('upgradeBet') || 0;
+    const multRaw = parseInt($('upgradeMultSlider').value);
+    const mult = multRaw/10;
+    $('upgradeMultLabel').textContent = 'x'+mult.toFixed(2);
+    const chance = Math.min(95, Math.max(1, 95/mult));
+    $('upgradeChanceLabel').textContent = chance.toFixed(1)+'%';
+    $('upgradeFromVal').textContent = '◆'+fmt(bet);
+    $('upgradeToVal').textContent = '◆'+fmt(bet*mult);
+  }
+  $('upgradeBet').addEventListener('input', updateUpgradeUI);
+  $('upgradeMultSlider').addEventListener('input', updateUpgradeUI);
+  updateUpgradeUI();
+
+  $('upgradeGoBtn').addEventListener('click', ()=>{
+    const bet = getBet('upgradeBet');
+    if(bet <= 0){ toast('Введите ставку'); return; }
+    if(bet > balance){ toast('Недостаточно фишек'); return; }
+    const multRaw = parseInt($('upgradeMultSlider').value);
+    const mult = multRaw/10;
+    const chance = Math.min(95, Math.max(1, 95/mult));
+
+    changeBalance(-bet);
+    $('upgradeGoBtn').disabled = true;
+    $('upgradeResult').className = 'result-msg';
+    $('upgradeResult').textContent = '';
+
+    setTimeout(()=>{
+      const roll = Math.random()*100;
+      const success = roll <= chance;
+      $('upgradeGoBtn').disabled = false;
+      if(success){
+        const win = bet*mult;
+        changeBalance(win);
+        $('upgradeResult').className = 'result-msg win';
+        $('upgradeResult').textContent = 'Успех! Получено '+fmt(win)+' фишек';
+      } else {
+        $('upgradeResult').className = 'result-msg lose';
+        $('upgradeResult').textContent = 'Неудача — потеряно '+fmt(bet)+' фишек';
+      }
+    }, 700);
+  });
+
+  // ==================== ROCKET ====================
+  let rocketInterval = null;
+  let rocketMult = 1;
+  let rocketCrashAt = 1;
+  let rocketActive = false;
+  let rocketBetLocked = 0;
+
+  function randomCrashPoint(){
+    // house-edge weighted: mostly low, occasionally high
+    const r = Math.random();
+    const raw = 0.99 / (1 - r*0.98);
+    return Math.max(1.01, Math.min(raw, 50));
+  }
+
+  $('rocketLaunchBtn').addEventListener('click', ()=>{
+    const bet = getBet('rocketBet');
+    if(bet <= 0){ toast('Введите ставку'); return; }
+    if(bet > balance){ toast('Недостаточно фишек'); return; }
+
+    changeBalance(-bet);
+    rocketBetLocked = bet;
+    rocketMult = 1;
+    rocketCrashAt = randomCrashPoint();
+    rocketActive = true;
+
+    $('rocketResult').className = 'result-msg';
+    $('rocketResult').textContent = '';
+    $('rocketLaunchBtn').style.display = 'none';
+    $('rocketCashoutBtn').style.display = 'block';
+    $('rocketCashoutBtn').disabled = false;
+    $('rocketStatus').textContent = 'В полёте...';
+    $('rocketMultDisplay').style.color = 'var(--text)';
+
+    const start = Date.now();
+    rocketInterval = setInterval(()=>{
+      const t = (Date.now()-start)/1000;
+      rocketMult = 1 + Math.pow(t, 1.55)*0.22;
+      if(rocketMult >= rocketCrashAt){
+        clearInterval(rocketInterval);
+        rocketActive = false;
+        $('rocketMultDisplay').textContent = rocketCrashAt.toFixed(2)+'x';
+        $('rocketMultDisplay').style.color = 'var(--red)';
+        $('rocketEmoji').style.bottom = '96%';
+        $('rocketEmoji').textContent = '💥';
+        $('rocketStatus').textContent = 'Взрыв на '+rocketCrashAt.toFixed(2)+'x';
+        $('rocketResult').className = 'result-msg lose';
+        $('rocketResult').textContent = 'Не успели забрать — потеряно '+fmt(rocketBetLocked)+' фишек';
+        $('rocketCashoutBtn').style.display = 'none';
+        $('rocketLaunchBtn').style.display = 'block';
+        $('rocketLaunchBtn').textContent = 'Запустить снова';
+        setTimeout(()=>{
+          $('rocketEmoji').style.bottom='14px';
+          $('rocketEmoji').textContent='🚀';
+          $('rocketMultDisplay').textContent='1.00x';
+          $('rocketTrail').style.height='0%';
+        }, 1400);
+        return;
+      }
+      $('rocketMultDisplay').textContent = rocketMult.toFixed(2)+'x';
+      $('rocketCashoutBtn').textContent = 'Забрать '+fmt(rocketBetLocked*rocketMult)+' фишек';
+      const heightPct = Math.min(90, (rocketMult-1)*18);
+      $('rocketEmoji').style.bottom = (14+heightPct*2)+'px';
+      $('rocketTrail').style.height = heightPct+'%';
+    }, 60);
+  });
+
+  $('rocketCashoutBtn').addEventListener('click', ()=>{
+    if(!rocketActive) return;
+    clearInterval(rocketInterval);
+    rocketActive = false;
+    const win = rocketBetLocked*rocketMult;
+    changeBalance(win);
+    $('rocketResult').className = 'result-msg win';
+    $('rocketResult').textContent = 'Забрано '+fmt(win)+' фишек (x'+rocketMult.toFixed(2)+')';
+    $('rocketStatus').textContent = 'Успешный вывод на '+rocketMult.toFixed(2)+'x';
+    $('rocketCashoutBtn').style.display = 'none';
+    $('rocketLaunchBtn').style.display = 'block';
+    $('rocketLaunchBtn').textContent = 'Запустить снова';
+    setTimeout(()=>{
+      $('rocketEmoji').style.bottom='14px';
+      $('rocketEmoji').textContent='🚀';
+      $('rocketMultDisplay').textContent='1.00x';
+      $('rocketMultDisplay').style.color='var(--text)';
+      $('rocketTrail').style.height='0%';
+    }, 1400);
+  });
+
+})();
+</script>
+</body>
+</html>
